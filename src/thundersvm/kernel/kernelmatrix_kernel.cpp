@@ -5,6 +5,41 @@
 #include <thundersvm/kernel/kernelmatrix_kernel.h>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <Eigen/Core>
+
+namespace Eigen {
+  template<> struct NumTraits<kernel_type> : GenericNumTraits<kernel_type>
+  {
+    typedef kernel_type Real;
+    typedef kernel_type NonInteger;
+    typedef kernel_type Nested;
+ 
+    static inline Real epsilon() { return static_cast<kernel_type>(0); }
+    static inline Real dummy_precision() { return static_cast<kernel_type>(0); }
+    static inline int digits10() { return 0; }
+ 
+    enum {
+      IsInteger = 0,
+      IsSigned = 1,
+      IsComplex = 0,
+      RequireInitialization = 1,
+      ReadCost = 1,
+      AddCost = 3,
+      MulCost = 3
+    };
+  };
+}
+
+// namespace Eigen {
+
+// template <typename scalarA, typename ScalarB>
+//         struct ScalarBinaryOpTraits<kernel_type, kernel_type, internal::scalar_product_op<kernel_type, kernel_type>> {
+//             typedef kernel_type ReturnType;
+//         };
+// }
+
+
+
 namespace svm_kernel {
     void
     get_working_set_ins(const SyncArray<kernel_type> &val, const SyncArray<int> &col_ind, const SyncArray<int> &row_ptr,

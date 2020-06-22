@@ -311,7 +311,7 @@ void SvmModel::load_from_string(string data) {
                 sv.emplace_back();//reserve space for an instance
                 string tuple;
                 while (ss >> tuple) {
-                    sv.back().emplace_back(0, 0);
+                    sv.back().emplace_back(0, static_cast<kernel_type>(0));
 //todo use streaming operator >> here to avoid ifdef
 #ifdef USE_DOUBLE
                     CHECK_EQ(sscanf(tuple.c_str(), "%d:%lf", &sv.back().back().index, &sv.back().back().value), 2)

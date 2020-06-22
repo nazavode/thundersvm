@@ -76,7 +76,7 @@ void DataSet::load_from_file(string file_name) {
                     int i;
                     float v;
                     CHECK_EQ(sscanf(tuple.c_str(), "%d:%f", &i, &v), 2) << "read error, using [index]:[value] format";
-                    instances_thread[tid].back().emplace_back(i, v);
+                    instances_thread[tid].back().emplace_back(i, static_cast<kernel_type>(v));
 					if(i == 0 && zero_based == 0) zero_based = 1;
                     if (i > local_feature[tid]) local_feature[tid] = i;
                 };
@@ -114,7 +114,7 @@ void DataSet::load_from_python(float *y, char **x, int len) {
         string tuple;
         while (ss >> tuple) {
             CHECK_EQ(sscanf(tuple.c_str(), "%d:%f", &ind, &v), 2) << "read error, using [index]:[value] format";
-            instances_[total_count_].emplace_back(ind, v);
+            instances_[total_count_].emplace_back(ind, static_cast<kernel_type>(v));
             if (ind > n_features_) n_features_ = ind;
         };
         total_count_++;
@@ -136,7 +136,7 @@ void DataSet::load_from_sparse(int row_size, float* val, int* row_ptr, int* col_
             ind = col_ptr[i];
 			ind++;			//convert to one-based format
             v = val[i];
-            instances_[total_count_].emplace_back(ind, v);
+            instances_[total_count_].emplace_back(ind, static_cast<kernel_type>(v));
             if(ind > n_features_) n_features_ = ind;
         }
         total_count_++;
@@ -163,7 +163,7 @@ void DataSet::load_from_dense(int row_size, int features, float* data, float* la
             ind = j;
             v = data[off];
             off++;
-            instances_[total_count_].emplace_back(ind, v);
+            instances_[total_count_].emplace_back(ind, static_cast<kernel_type>(v));
         }
         total_count_++;
     }

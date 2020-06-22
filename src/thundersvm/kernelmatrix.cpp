@@ -26,7 +26,7 @@ KernelMatrix::KernelMatrix(const DataSet::node2d &instances, SvmParam param) {
             if (instances[i][j].index > n_features_) n_features_ = instances[i][j].index;
         }
         csr_row_ptr.push_back(csr_row_ptr.back() + instances[i].size());
-        csr_self_dot.push_back(self_dot);
+        csr_self_dot.push_back(static_cast<kernel_type>(self_dot));
     }
     n_features_++;
 
@@ -59,11 +59,11 @@ KernelMatrix::KernelMatrix(const DataSet::node2d &instances, SvmParam param) {
             break;
         case SvmParam::POLY:
             diag_.copy_from(self_dot_);
-            poly_kernel(diag_, param.gamma, param.coef0, param.degree, diag_.size());
+            poly_kernel(diag_, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), param.degree, diag_.size());
             break;
         case SvmParam::SIGMOID:
             diag_.copy_from(self_dot_);
-            sigmoid_kernel(diag_, param.gamma, param.coef0, diag_.size());
+            sigmoid_kernel(diag_, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), diag_.size());
         default:
             break;
     }
@@ -85,16 +85,16 @@ void KernelMatrix::get_rows(const SyncArray<int> &idx,
     switch (param.kernel_type) {
         case SvmParam::RBF:
         case SvmParam::PRECOMPUTED://precomputed uses rbf as default
-            RBF_kernel(idx, self_dot_, kernel_rows, idx.size(), n_instances_, param.gamma);
+            RBF_kernel(idx, self_dot_, kernel_rows, idx.size(), n_instances_, static_cast<kernel_type>(param.gamma));
 			break;
         case SvmParam::LINEAR:
             //do nothing
             break;
         case SvmParam::POLY:
-            poly_kernel(kernel_rows, param.gamma, param.coef0, param.degree, kernel_rows.size());
+            poly_kernel(kernel_rows, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), param.degree, kernel_rows.size());
             break;
         case SvmParam::SIGMOID:
-            sigmoid_kernel(kernel_rows, param.gamma, param.coef0, kernel_rows.size());
+            sigmoid_kernel(kernel_rows, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), kernel_rows.size());
             break;
     }
 }
@@ -109,7 +109,7 @@ void KernelMatrix::get_rows(const DataSet::node2d &instances,
     SyncArray<kernel_type> self_dot(instances.size());
     kernel_type *self_dot_data = self_dot.host_data();
     for (int i = 0; i < instances.size(); ++i) {
-        kernel_type sum = 0;
+        kernel_type sum(0);
         for (int j = 0; j < instances[i].size(); ++j) {
             sum += instances[i][j].value * instances[i][j].value;
         }
@@ -118,16 +118,16 @@ void KernelMatrix::get_rows(const DataSet::node2d &instances,
     switch (param.kernel_type) {
         case SvmParam::RBF:
         case SvmParam::PRECOMPUTED://precomputed uses rbf as default
-            RBF_kernel(self_dot, self_dot_, kernel_rows, instances.size(), n_instances_, param.gamma);
+            RBF_kernel(self_dot, self_dot_, kernel_rows, instances.size(), n_instances_, static_cast<kernel_type>(param.gamma));
             break;
         case SvmParam::LINEAR:
             //do nothing
             break;
         case SvmParam::POLY:
-            poly_kernel(kernel_rows, param.gamma, param.coef0, param.degree, kernel_rows.size());
+            poly_kernel(kernel_rows, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), param.degree, kernel_rows.size());
             break;
         case SvmParam::SIGMOID:
-            sigmoid_kernel(kernel_rows, param.gamma, param.coef0, kernel_rows.size());
+            sigmoid_kernel(kernel_rows, static_cast<kernel_type>(param.gamma), static_cast<kernel_type>(param.coef0), kernel_rows.size());
             break;
     }
 }
@@ -159,17 +159,17 @@ KernelMatrix::dns_dns_mul(const SyncArray<kernel_type> &dense_mat, int n_rows,
 #endif
 void KernelMatrix::get_dot_product_dns_csr(const SyncArray<int> &idx, SyncArray<kernel_type> &dot_product) const {
     SyncArray<kernel_type> data_rows(idx.size() * n_features_);
-    data_rows.mem_set(0);
+    data_rows.mem_set(static_cast<kernel_type>(0));
     get_working_set_ins(val_, col_ind_, row_ptr_, idx, data_rows, idx.size(), n_features_);
     dns_csr_mul(data_rows, idx.size(), dot_product);
 }
 
 void KernelMatrix::get_dot_product(const DataSet::node2d &instances, SyncArray<kernel_type> &dot_product) const {
     SyncArray<kernel_type> dense_ins(instances.size() * n_features_);
-    dense_ins.mem_set(0);
+    dense_ins.mem_set(static_cast<kernel_type>(0));
     kernel_type *dense_ins_data = dense_ins.host_data();
     for (int i = 0; i < instances.size(); ++i) {
-        kernel_type sum = 0;
+        kernel_type sum(0);
         for (int j = 0; j < instances[i].size(); ++j) {
             if (instances[i][j].index < n_features_) {
                 //col major for cuSPARSE, row major for Eigen
@@ -197,9 +197,9 @@ void KernelMatrix::get_dot_product_csr_csr(const SyncArray<int> &idx, SyncArray<
 
 void KernelMatrix::get_dot_product_dns_dns(const SyncArray<int> &idx, SyncArray<kernel_type> &dot_product) const {
     SyncArray<kernel_type> data_rows(idx.size() * n_features_);
-    data_rows.mem_set(0);
+    data_rows.mem_set(static_cast<kernel_type>(0));
     SyncArray<kernel_type> origin_dense(n_instances_ * n_features());
-    origin_dense.mem_set(0);
+    origin_dense.mem_set(static_cast<kernel_type>(0));
     SyncArray<int> origin_idx(n_instances_);
     int *origin_idx_data = origin_idx.host_data();
     for (int i = 0; i < n_instances_; ++i) {

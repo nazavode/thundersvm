@@ -17,6 +17,14 @@ typedef double float_type;
 
 #ifdef USE_DOUBLE
 typedef double kernel_type;
+#elif defined(THUNDERSVM_USE_FLOATX)
+
+#include <floatx.hpp>
+
+typedef flx::floatx<
+  THUNDERSVM_FLOATX_EXPONENT_BITS,
+  THUNDERSVM_FLOATX_MANTISSA_BITS> kernel_type;
+
 #else
 typedef float kernel_type;
 #endif

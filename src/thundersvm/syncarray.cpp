@@ -93,3 +93,6 @@ class SyncArray<float>;
 
 template
 class SyncArray<double>;
+
+template
+class SyncArray<kernel_type>;
